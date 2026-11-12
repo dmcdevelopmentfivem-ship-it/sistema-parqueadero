@@ -18,13 +18,18 @@ export default function Login() {
       form.append('username', email)
       form.append('password', password)
       const { data } = await api.post('/auth/login', form)
+
+      // 1. Guardamos el token y el usuario en el contexto y en el localStorage
       login(data)
-      nav('/')
+
+      // 2. Usamos window.location.href en lugar de navigate() 
+      // Esto fuerza una recarga completa de la página y evita el bug de React Router en Render
+      window.location.href = '/'
+
     } catch (err) {
       setError(err.response?.data?.detail || 'Error de login')
     }
   }
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-900">
       <form onSubmit={submit} className="bg-white p-8 rounded-xl shadow-xl w-96">
