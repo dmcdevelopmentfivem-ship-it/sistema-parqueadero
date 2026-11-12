@@ -29,7 +29,7 @@ export default function Dashboard() {
         <Stat label="Espacios Ocupados" value={stats.espacios_ocupados} icon={MapPin} color="bg-orange-100 text-orange-700" />
         <Stat label="Vehículos Dentro" value={stats.vehiculos_dentro} icon={Car} color="bg-purple-100 text-purple-700" />
         <Stat label="Mensualidades Activas" value={stats.mensualidades_activas} icon={Calendar} color="bg-cyan-100 text-cyan-700" />
-        <Stat label="Ingresos Hoy" value={`$${stats.ingresos_hoy.toLocaleString()}`} icon={DollarSign} color="bg-emerald-100 text-emerald-700" />
+        <Stat label="Ingresos Hoy" value={`$${(stats.ingresos_hoy || 0).toLocaleString()}`} icon={DollarSign} color="bg-emerald-100 text-emerald-700" />
       </div>
     </div>
   )
