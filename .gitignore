@@ -1,0 +1,17 @@
+# Entornos virtuales y dependencias
+venv/
+__pycache__/
+*.pyc
+node_modules/
+dist/
+
+# Archivos de entorno (¡NUNCA subir contraseñas!)
+.env
+
+# Base de datos local (si usaras SQLite)
+*.db
+*.sqlite
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
