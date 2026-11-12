@@ -27,7 +27,7 @@ export default function Entradas() {
       const valor = calc.data.valor
       if (!confirm(`Cobrar $${valor}?`)) return
       const { data } = await api.post(`/entradas/salida/${id}`, { metodo_pago: 'efectivo' })
-      setMsg(`✅ Salida: ${data.placa} - $${data.valor} (cambio: $${data.cambio})`)
+      setMsg(`✅ Salida: ${data.placa} - $${Number(data.valor || 0).toLocaleString()} (cambio: $${Number(data.cambio || 0).toLocaleString()})`)
       cargar()
     } catch (err) { setMsg('❌ ' + (err.response?.data?.detail || 'Error')) }
   }

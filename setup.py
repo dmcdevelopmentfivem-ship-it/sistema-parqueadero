@@ -1512,7 +1512,7 @@ export default function Entradas() {
       const valor = calc.data.valor
       if (!confirm(`Cobrar $${valor}?`)) return
       const { data } = await api.post(`/entradas/salida/${id}`, { metodo_pago: 'efectivo' })
-      setMsg(`✅ Salida: ${data.placa} - $${data.valor} (cambio: $${data.cambio})`)
+      setMsg(`✅ Salida: ${data.placa} - $${Number(data.valor || 0).toLocaleString()} (cambio: $${Number(data.cambio || 0).toLocaleString()})`)
       cargar()
     } catch (err) { setMsg('❌ ' + (err.response?.data?.detail || 'Error')) }
   }
@@ -1769,9 +1769,9 @@ export default function Tarifas() {
             {ts.map(t => (
               <tr key={t.id} className="border-b">
                 <td className="py-2 font-bold uppercase">{t.tipo_vehiculo}</td>
-                <td>{t.nombre}</td><td>${t.valor_hora}</td>
-                <td>${t.valor_fraccion}/{t.minutos_fraccion}min</td>
-                <td>${t.valor_dia}</td>
+                <td>{t.nombre}</td><td>${Number(t.valor_hora || 0).toLocaleString()}</td>
+                <td>${Number(t.valor_fraccion || 0).toLocaleString()}/{t.minutos_fraccion}min</td>
+                <td>${Number(t.valor_dia || 0).toLocaleString()}</td>
                 <td>{t.activa ? '✅' : '—'}</td>
               </tr>
             ))}
@@ -1883,9 +1883,9 @@ export default function Contabilidad() {
 
       {resumen && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
-          <div className="card"><p className="text-sm text-slate-500">Ingresos</p><p className="text-xl font-bold text-green-600">${resumen.ingresos.toLocaleString()}</p></div>
-          <div className="card"><p className="text-sm text-slate-500">Egresos</p><p className="text-xl font-bold text-red-600">${resumen.egresos.toLocaleString()}</p></div>
-          <div className="card"><p className="text-sm text-slate-500">Neto</p><p className="text-xl font-bold">${resumen.neto.toLocaleString()}</p></div>
+          <div className="card"><p className="text-sm text-slate-500">Ingresos</p><p className="text-xl font-bold text-green-600">${Number(resumen.ingresos || 0).toLocaleString()}</p></div>
+          <div className="card"><p className="text-sm text-slate-500">Egresos</p><p className="text-xl font-bold text-red-600">${Number(resumen.egresos || 0).toLocaleString()}</p></div>
+          <div className="card"><p className="text-sm text-slate-500">Neto</p><p className="text-xl font-bold">${Number(resumen.neto || 0).toLocaleString()}</p></div>
           <div className="card"><p className="text-sm text-slate-500">Movimientos</p><p className="text-xl font-bold">{resumen.movimientos}</p></div>
         </div>
       )}
@@ -1914,7 +1914,7 @@ export default function Contabilidad() {
                 <td className="py-2">{new Date(m.fecha).toLocaleTimeString()}</td>
                 <td><span className={m.tipo === 'ingreso' ? 'text-green-600' : 'text-red-600'}>{m.tipo}</span></td>
                 <td>{m.concepto}</td>
-                <td>${(+m.monto).toLocaleString()}</td>
+                <td>${Number(m.monto || 0).toLocaleString()}</td>
                 <td>{m.metodo_pago}</td>
               </tr>
             ))}
@@ -1963,7 +1963,7 @@ export default function Reportes() {
                 <td className="py-2 font-bold">{h.placa}</td><td>{h.tipo}</td>
                 <td>{h.entrada ? new Date(h.entrada).toLocaleString() : '-'}</td>
                 <td>{h.salida ? new Date(h.salida).toLocaleString() : '-'}</td>
-                <td>{h.minutos ?? '-'}</td><td>${h.valor.toLocaleString()}</td>
+                <td>{h.minutos ?? '-'}</td><td>${Number(h.valor || 0).toLocaleString()}</td>
                 <td>{h.estado}</td>
               </tr>
             ))}

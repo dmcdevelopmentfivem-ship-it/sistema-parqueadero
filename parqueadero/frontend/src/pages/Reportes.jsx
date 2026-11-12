@@ -34,7 +34,7 @@ export default function Reportes() {
                 <td className="py-2 font-bold">{h.placa}</td><td>{h.tipo}</td>
                 <td>{h.entrada ? new Date(h.entrada).toLocaleString() : '-'}</td>
                 <td>{h.salida ? new Date(h.salida).toLocaleString() : '-'}</td>
-                <td>{h.minutos ?? '-'}</td><td>${h.valor.toLocaleString()}</td>
+                <td>{h.minutos ?? '-'}</td><td>${Number(h.valor || 0).toLocaleString()}</td>
                 <td>{h.estado}</td>
               </tr>
             ))}

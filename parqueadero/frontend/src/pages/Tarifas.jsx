@@ -44,9 +44,9 @@ export default function Tarifas() {
             {ts.map(t => (
               <tr key={t.id} className="border-b">
                 <td className="py-2 font-bold uppercase">{t.tipo_vehiculo}</td>
-                <td>{t.nombre}</td><td>${t.valor_hora}</td>
-                <td>${t.valor_fraccion}/{t.minutos_fraccion}min</td>
-                <td>${t.valor_dia}</td>
+                <td>{t.nombre}</td><td>${Number(t.valor_hora || 0).toLocaleString()}</td>
+                <td>${Number(t.valor_fraccion || 0).toLocaleString()}/{t.minutos_fraccion}min</td>
+                <td>${Number(t.valor_dia || 0).toLocaleString()}</td>
                 <td>{t.activa ? '✅' : '—'}</td>
               </tr>
             ))}
