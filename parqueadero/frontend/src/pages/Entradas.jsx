@@ -7,7 +7,9 @@ export default function Entradas() {
   const [form, setForm] = useState({ placa: '', tipo_vehiculo: 'carro' })
   const [msg, setMsg] = useState('')
 
-  const cargar = () => api.get('/entradas/activas').then(r => setActivas(r.data))
+  const cargar = () => api.get('/entradas/activas')
+    .then(r => setActivas(Array.isArray(r.data) ? r.data : []))
+    .catch(() => setActivas([]))
   useEffect(() => { cargar() }, [])
 
   async function entrada(e) {
@@ -56,13 +58,13 @@ export default function Entradas() {
       </form>
 
       <div className="card overflow-x-auto">
-        <h3 className="font-semibold mb-3">Vehículos dentro ({activas.length})</h3>
+        <h3 className="font-semibold mb-3">Vehículos dentro ({Array.isArray(activas) ? activas.length : 0})</h3>
         <table className="w-full text-sm">
           <thead className="text-left text-slate-500 border-b">
             <tr><th className="py-2">Ticket</th><th>Placa</th><th>Tipo</th><th>Espacio</th><th>Entrada</th><th></th></tr>
           </thead>
           <tbody>
-            {activas.map(o => (
+            {(Array.isArray(activas) ? activas : []).map(o => (
               <tr key={o.id} className="border-b hover:bg-slate-50">
                 <td className="py-2">#{o.id}</td>
                 <td className="font-bold text-slate-800">{o.placa || `#${o.vehiculo_id}`}</td>
@@ -76,7 +78,7 @@ export default function Entradas() {
                 </td>
               </tr>
             ))}
-            {!activas.length && <tr><td colSpan="6" className="py-6 text-center text-slate-400">Sin vehículos dentro</td></tr>}
+            {(!Array.isArray(activas) || !activas.length) && <tr><td colSpan="6" className="py-6 text-center text-slate-400">Sin vehículos dentro</td></tr>}
           </tbody>
         </table>
       </div>
