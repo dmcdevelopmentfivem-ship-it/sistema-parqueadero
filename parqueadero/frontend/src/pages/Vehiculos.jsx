@@ -7,9 +7,12 @@ export default function Vehiculos() {
   const [form, setForm] = useState({ placa: '', tipo: 'carro', marca: '', color: '', propietario: '', telefono: '' })
   const [msg, setMsg] = useState('')
 
-  const cargar = () => api.get(`/vehiculos/?${q ? `q=${q}` : ''}`)
-    .then(r => { if (Array.isArray(r.data)) setVs(r.data); else setVs([]) })
-    .catch(() => setVs([]))
+  const cargar = () => {
+    api.get(`/vehiculos/?${q ? `q=${q}` : ''}`)
+      .then(r => setVs(Array.isArray(r.data) ? r.data : []))
+      .catch(() => setVs([]))
+  }
+
   useEffect(() => { cargar() }, [q])
 
   async function crear(e) {
@@ -53,6 +56,7 @@ export default function Vehiculos() {
                 <td>{v.tipo}</td><td>{v.marca || '-'}</td><td>{v.color || '-'}</td><td>{v.propietario || '-'}</td>
               </tr>
             ))}
+            {(!vs || vs.length === 0) && <tr><td colSpan="5" className="py-6 text-center text-slate-400">No hay vehículos</td></tr>}
           </tbody>
         </table>
       </div>

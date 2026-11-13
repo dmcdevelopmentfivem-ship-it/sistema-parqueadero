@@ -6,9 +6,12 @@ export default function Tarifas() {
   const [form, setForm] = useState({ nombre: '', tipo_vehiculo: 'carro', valor_hora: 0, valor_fraccion: 0, minutos_fraccion: 15, valor_dia: 0 })
   const [msg, setMsg] = useState('')
 
-  const cargar = () => api.get('/tarifas/')
-    .then(r => { if (Array.isArray(r.data)) setTs(r.data); else setTs([]) })
-    .catch(() => setTs([]))
+  const cargar = () => {
+    api.get('/tarifas/')
+      .then(r => setTs(Array.isArray(r.data) ? r.data : []))
+      .catch(() => setTs([]))
+  }
+
   useEffect(() => { cargar() }, [])
 
   async function crear(e) {
@@ -47,11 +50,12 @@ export default function Tarifas() {
               <tr key={t.id} className="border-b">
                 <td className="py-2 font-bold uppercase">{t.tipo_vehiculo}</td>
                 <td>{t.nombre}</td><td>${Number(t.valor_hora || 0).toLocaleString()}</td>
-                <td>${Number(t.valor_fraccion || 0).toLocaleString()}/{t.minutos_fraccion}min</td>
+                <td>${Number(t.valor_fraccion || 0).toLocaleString()}/{t.minutos_fraccion || 0}min</td>
                 <td>${Number(t.valor_dia || 0).toLocaleString()}</td>
                 <td>{t.activa ? '✅' : '—'}</td>
               </tr>
             ))}
+            {(!ts || ts.length === 0) && <tr><td colSpan="6" className="py-6 text-center text-slate-400">Sin tarifas configuradas</td></tr>}
           </tbody>
         </table>
       </div>
