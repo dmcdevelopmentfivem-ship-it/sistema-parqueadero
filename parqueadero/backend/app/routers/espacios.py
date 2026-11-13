@@ -17,7 +17,8 @@ def crear_zona(data: ZonaCreate, db: Session = Depends(get_db), _=Depends(get_cu
 
 @router.get("/", response_model=list[EspacioOut])
 def listar(db: Session = Depends(get_db), _=Depends(get_current_user)):
-    return db.query(Espacio).order_by(Espacio.codigo).all()
+    # Solo mostramos los que estan activos
+    return db.query(Espacio).filter(Espacio.activo == True).order_by(Espacio.codigo).all()
 
 @router.get("/libres")
 def libres(tipo: str, db: Session = Depends(get_db), _=Depends(get_current_user)):
@@ -34,6 +35,24 @@ def crear(data: EspacioCreate, db: Session = Depends(get_db), _=Depends(get_curr
         raise HTTPException(400, "Código ya existe")
     e = Espacio(**data.model_dump()); db.add(e); db.commit(); db.refresh(e); return e
 
+@router.put("/{espacio_id}", response_model=EspacioOut)
+def actualizar_espacio(espacio_id: int, data: EspacioCreate, db: Session = Depends(get_db), _=Depends(get_current_user)):
+    espacio = db.query(Espacio).filter(Espacio.id == espacio_id).first()
+    if not espacio:
+        raise HTTPException(404, "Espacio no encontrado")
+    
+    # Verificar que el nuevo codigo no este en uso por otro espacio
+    if data.codigo != espacio.codigo:
+        existe = db.query(Espacio).filter(Espacio.codigo == data.codigo, Espacio.id != espacio_id).first()
+        if existe:
+            raise HTTPException(400, "El nuevo código ya está en uso")
+
+    espacio.codigo = data.codigo
+    espacio.tipo_vehiculo = data.tipo_vehiculo
+    db.commit()
+    db.refresh(espacio)
+    return espacio
+
 @router.delete("/{espacio_id}", status_code=204)
 def eliminar_espacio(espacio_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
     espacio = db.query(Espacio).filter(Espacio.id == espacio_id).first()
@@ -42,6 +61,7 @@ def eliminar_espacio(espacio_id: int, db: Session = Depends(get_db), _=Depends(g
     if espacio.estado == "ocupado":
         raise HTTPException(400, "No se puede borrar un espacio que está ocupado")
     
-    db.delete(espacio)
+    # Lo desactivamos para no romper el historial
+    espacio.activo = False
     db.commit()
     return None
