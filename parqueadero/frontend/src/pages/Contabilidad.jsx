@@ -10,11 +10,23 @@ export default function Contabilidad() {
   const [form, setForm] = useState({ tipo: 'egreso', concepto: '', monto: 0, metodo_pago: 'efectivo' })
 
   const cargar = async () => {
-    const r1 = await api.get(`/contabilidad/resumen?fecha=${fecha}`)
-    setResumen(r1.data)
-    const r2 = await api.get(`/contabilidad/movimientos?desde=${fecha}&hasta=${fecha}`)
-    setMovs(r2.data)
+    try {
+      const r1 = await api.get(`/contabilidad/resumen?fecha=${fecha}`)
+      setResumen(r1.data)
+
+      const r2 = await api.get(`/contabilidad/movimientos?desde=${fecha}&hasta=${fecha}`)
+      // AQUÍ ESTÁ LA PROTECCIÓN PARA EL ERROR DE .map
+      if (Array.isArray(r2.data)) {
+        setMovs(r2.data)
+      } else {
+        setMovs([])
+      }
+    } catch (err) {
+      console.error(err)
+      setMovs([]) // Si falla, ponemos array vacío para que no se rompa
+    }
   }
+
   useEffect(() => { cargar() }, [fecha])
 
   async function crear(e) {
@@ -38,7 +50,7 @@ export default function Contabilidad() {
           <div className="card"><p className="text-sm text-slate-500">Ingresos</p><p className="text-xl font-bold text-green-600">${Number(resumen.ingresos || 0).toLocaleString()}</p></div>
           <div className="card"><p className="text-sm text-slate-500">Egresos</p><p className="text-xl font-bold text-red-600">${Number(resumen.egresos || 0).toLocaleString()}</p></div>
           <div className="card"><p className="text-sm text-slate-500">Neto</p><p className="text-xl font-bold">${Number(resumen.neto || 0).toLocaleString()}</p></div>
-          <div className="card"><p className="text-sm text-slate-500">Movimientos</p><p className="text-xl font-bold">{resumen.movimientos}</p></div>
+          <div className="card"><p className="text-sm text-slate-500">Movimientos</p><p className="text-xl font-bold">{resumen.movimientos || 0}</p></div>
         </div>
       )}
 
@@ -61,7 +73,8 @@ export default function Contabilidad() {
             <tr><th className="py-2">Hora</th><th>Tipo</th><th>Concepto</th><th>Monto</th><th>Método</th></tr>
           </thead>
           <tbody>
-            {movs.map(m => (
+            {/* PROTECCIÓN AL RENDERIZAR LA TABLA */}
+            {Array.isArray(movs) && movs.map(m => (
               <tr key={m.id} className="border-b">
                 <td className="py-2">{new Date(m.fecha).toLocaleTimeString()}</td>
                 <td><span className={m.tipo === 'ingreso' ? 'text-green-600' : 'text-red-600'}>{m.tipo}</span></td>
@@ -70,7 +83,7 @@ export default function Contabilidad() {
                 <td>{m.metodo_pago}</td>
               </tr>
             ))}
-            {!movs.length && <tr><td colSpan="5" className="py-6 text-center text-slate-400">Sin movimientos</td></tr>}
+            {(!movs || movs.length === 0) && <tr><td colSpan="5" className="py-6 text-center text-slate-400">Sin movimientos</td></tr>}
           </tbody>
         </table>
       </div>
