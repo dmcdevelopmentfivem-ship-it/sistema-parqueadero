@@ -1579,7 +1579,9 @@ export default function Espacios() {
   const [form, setForm] = useState({ codigo: '', tipo_vehiculo: 'carro' })
   const [msg, setMsg] = useState('')
 
-  const cargar = () => api.get('/espacios/').then(r => setEsp(r.data))
+  const cargar = () => api.get('/espacios/')
+    .then(r => { if (Array.isArray(r.data)) setEsp(r.data); else setEsp([]) })
+    .catch(() => setEsp([]))
   useEffect(() => { cargar() }, [])
 
   async function crear(e) {
@@ -1631,7 +1633,7 @@ export default function Espacios() {
       </form>
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-        {esp.map(e => (
+        {Array.isArray(esp) && esp.map(e => (
           <div key={e.id} className={`relative border-2 rounded-lg p-3 text-center ${color(e)}`}>
             <button
               type="button"
@@ -1651,7 +1653,7 @@ export default function Espacios() {
             <p className="text-xs mt-1 capitalize">{e.estado}</p>
           </div>
         ))}
-        {!esp.length && (
+        {(!Array.isArray(esp) || !esp.length) && (
           <div className="col-span-full py-8 text-center text-slate-400">
             Sin espacios registrados. Agrega uno usando el formulario superior.
           </div>
@@ -1671,7 +1673,9 @@ export default function Vehiculos() {
   const [form, setForm] = useState({ placa: '', tipo: 'carro', marca: '', color: '', propietario: '', telefono: '' })
   const [msg, setMsg] = useState('')
 
-  const cargar = () => api.get(`/vehiculos/?${q ? `q=${q}` : ''}`).then(r => setVs(r.data))
+  const cargar = () => api.get(`/vehiculos/?${q ? `q=${q}` : ''}`)
+    .then(r => { if (Array.isArray(r.data)) setVs(r.data); else setVs([]) })
+    .catch(() => setVs([]))
   useEffect(() => { cargar() }, [q])
 
   async function crear(e) {
@@ -1709,7 +1713,7 @@ export default function Vehiculos() {
             <tr><th className="py-2">Placa</th><th>Tipo</th><th>Marca</th><th>Color</th><th>Propietario</th></tr>
           </thead>
           <tbody>
-            {vs.map(v => (
+            {Array.isArray(vs) && vs.map(v => (
               <tr key={v.id} className="border-b">
                 <td className="py-2 font-bold">{v.placa}</td>
                 <td>{v.tipo}</td><td>{v.marca || '-'}</td><td>{v.color || '-'}</td><td>{v.propietario || '-'}</td>
@@ -1731,7 +1735,9 @@ export default function Tarifas() {
   const [form, setForm] = useState({ nombre: '', tipo_vehiculo: 'carro', valor_hora: 0, valor_fraccion: 0, minutos_fraccion: 15, valor_dia: 0 })
   const [msg, setMsg] = useState('')
 
-  const cargar = () => api.get('/tarifas/').then(r => setTs(r.data))
+  const cargar = () => api.get('/tarifas/')
+    .then(r => { if (Array.isArray(r.data)) setTs(r.data); else setTs([]) })
+    .catch(() => setTs([]))
   useEffect(() => { cargar() }, [])
 
   async function crear(e) {
@@ -1766,7 +1772,7 @@ export default function Tarifas() {
             <tr><th className="py-2">Tipo</th><th>Nombre</th><th>Hora</th><th>Fracción</th><th>Día</th><th>Activa</th></tr>
           </thead>
           <tbody>
-            {ts.map(t => (
+            {Array.isArray(ts) && ts.map(t => (
               <tr key={t.id} className="border-b">
                 <td className="py-2 font-bold uppercase">{t.tipo_vehiculo}</td>
                 <td>{t.nombre}</td><td>${Number(t.valor_hora || 0).toLocaleString()}</td>
@@ -1791,7 +1797,9 @@ export default function Mensualidades() {
   const [form, setForm] = useState({ placa: '', tipo_vehiculo: 'carro', fecha_inicio: '', fecha_fin: '', valor: '' })
   const [msg, setMsg] = useState('')
 
-  const cargar = () => api.get('/mensualidades/').then(r => setMs(r.data))
+  const cargar = () => api.get('/mensualidades/')
+    .then(r => { if (Array.isArray(r.data)) setMs(r.data); else setMs([]) })
+    .catch(() => setMs([]))
   useEffect(() => { cargar() }, [])
 
   async function crear(e) {
@@ -1829,7 +1837,7 @@ export default function Mensualidades() {
             <tr><th className="py-2">ID</th><th>Placa</th><th>Inicio</th><th>Fin</th><th>Valor</th><th>Estado</th></tr>
           </thead>
           <tbody>
-            {ms.map(m => (
+            {Array.isArray(ms) && ms.map(m => (
               <tr key={m.id} className="border-b">
                 <td className="py-2">#{m.id}</td>
                 <td className="font-bold text-slate-800">{m.placa || `#${m.vehiculo_id}`}</td>

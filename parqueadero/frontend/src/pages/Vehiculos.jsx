@@ -7,7 +7,9 @@ export default function Vehiculos() {
   const [form, setForm] = useState({ placa: '', tipo: 'carro', marca: '', color: '', propietario: '', telefono: '' })
   const [msg, setMsg] = useState('')
 
-  const cargar = () => api.get(`/vehiculos/?${q ? `q=${q}` : ''}`).then(r => setVs(r.data))
+  const cargar = () => api.get(`/vehiculos/?${q ? `q=${q}` : ''}`)
+    .then(r => { if (Array.isArray(r.data)) setVs(r.data); else setVs([]) })
+    .catch(() => setVs([]))
   useEffect(() => { cargar() }, [q])
 
   async function crear(e) {
@@ -45,7 +47,7 @@ export default function Vehiculos() {
             <tr><th className="py-2">Placa</th><th>Tipo</th><th>Marca</th><th>Color</th><th>Propietario</th></tr>
           </thead>
           <tbody>
-            {vs.map(v => (
+            {Array.isArray(vs) && vs.map(v => (
               <tr key={v.id} className="border-b">
                 <td className="py-2 font-bold">{v.placa}</td>
                 <td>{v.tipo}</td><td>{v.marca || '-'}</td><td>{v.color || '-'}</td><td>{v.propietario || '-'}</td>

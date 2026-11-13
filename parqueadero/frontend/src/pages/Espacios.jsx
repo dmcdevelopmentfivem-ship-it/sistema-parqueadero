@@ -7,7 +7,9 @@ export default function Espacios() {
   const [form, setForm] = useState({ codigo: '', tipo_vehiculo: 'carro' })
   const [msg, setMsg] = useState('')
 
-  const cargar = () => api.get('/espacios/').then(r => setEsp(r.data))
+  const cargar = () => api.get('/espacios/')
+    .then(r => { if (Array.isArray(r.data)) setEsp(r.data); else setEsp([]) })
+    .catch(() => setEsp([]))
   useEffect(() => { cargar() }, [])
 
   async function crear(e) {
@@ -59,7 +61,7 @@ export default function Espacios() {
       </form>
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-        {esp.map(e => (
+        {Array.isArray(esp) && esp.map(e => (
           <div key={e.id} className={`relative border-2 rounded-lg p-3 text-center ${color(e)}`}>
             <button
               type="button"
@@ -79,7 +81,7 @@ export default function Espacios() {
             <p className="text-xs mt-1 capitalize">{e.estado}</p>
           </div>
         ))}
-        {!esp.length && (
+        {(!Array.isArray(esp) || !esp.length) && (
           <div className="col-span-full py-8 text-center text-slate-400">
             Sin espacios registrados. Agrega uno usando el formulario superior.
           </div>

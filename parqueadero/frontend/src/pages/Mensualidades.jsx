@@ -6,7 +6,9 @@ export default function Mensualidades() {
   const [form, setForm] = useState({ placa: '', tipo_vehiculo: 'carro', fecha_inicio: '', fecha_fin: '', valor: '' })
   const [msg, setMsg] = useState('')
 
-  const cargar = () => api.get('/mensualidades/').then(r => setMs(r.data))
+  const cargar = () => api.get('/mensualidades/')
+    .then(r => { if (Array.isArray(r.data)) setMs(r.data); else setMs([]) })
+    .catch(() => setMs([]))
   useEffect(() => { cargar() }, [])
 
   async function crear(e) {
@@ -44,7 +46,7 @@ export default function Mensualidades() {
             <tr><th className="py-2">ID</th><th>Placa</th><th>Inicio</th><th>Fin</th><th>Valor</th><th>Estado</th></tr>
           </thead>
           <tbody>
-            {ms.map(m => (
+            {Array.isArray(ms) && ms.map(m => (
               <tr key={m.id} className="border-b">
                 <td className="py-2">#{m.id}</td>
                 <td className="font-bold text-slate-800">{m.placa || `#${m.vehiculo_id}`}</td>
