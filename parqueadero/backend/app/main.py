@@ -18,9 +18,7 @@ except Exception as e:
 def seed():
     db = SessionLocal()
     try:
-        # Crear usuario
         if not db.query(models.Usuario).first():
-            print("--> 👤 Creando usuario admin...")
             db.add(models.Usuario(
                 nombre="Administrador",
                 email="admin@parqueadero.com",
@@ -29,9 +27,7 @@ def seed():
             ))
             db.commit()
 
-        # Crear tarifas
         if db.query(models.Tarifa).count() == 0:
-            print("--> 💰 Creando tarifas de Bogotá...")
             db.add(models.Tarifa(
                 nombre="Tarifa Carro Bogotá", tipo_vehiculo="carro",
                 valor_hora=13800, valor_fraccion=230,
@@ -48,13 +44,6 @@ def seed():
                 minutos_fraccion=1, valor_dia=5000
             ))
             db.commit()
-            print("--> ✅ Tarifas creadas con éxito.")
-        else:
-            print("--> ℹ️ Las tarifas ya existen en la base de datos.")
-            
-    except Exception as e:
-        print(f"--> ❌ Error en el Seed: {e}")
-        db.rollback()
     finally:
         db.close()
 
@@ -63,15 +52,17 @@ seed()
 # 3. Inicializar la App
 app = FastAPI(title="Sistema Parqueadero API", version="1.0.0")
 
+# 4. Configuración de CORS BLINDADA
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_origins=["*"],  # Permite cualquier origen
+    allow_credentials=False, # IMPORTANTE: Debe ser False si usas "*"
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"], # Habilitamos explicitamente DELETE y OPTIONS
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
-# 4. Rutas
+# 5. Rutas
 app.include_router(auth.router)
 app.include_router(usuarios.router)
 app.include_router(vehiculos.router)
