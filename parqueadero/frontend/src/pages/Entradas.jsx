@@ -7,31 +7,59 @@ export default function Entradas() {
   const [form, setForm] = useState({ placa: '', tipo_vehiculo: 'carro' })
   const [msg, setMsg] = useState('')
 
-  const cargar = () => api.get('/entradas/activas')
-    .then(r => setActivas(Array.isArray(r.data) ? r.data : []))
-    .catch(() => setActivas([]))
-  useEffect(() => { cargar() }, [])
+  // Función para cargar los vehículos dentro
+  const cargar = () => {
+    api.get('/entradas/activas')
+      .then(r => {
+        if (Array.isArray(r.data)) setActivas(r.data)
+        else setActivas([])
+      })
+      .catch(err => {
+        console.error(err)
+        setActivas([])
+      })
+  }
+
+  // Cargar al iniciar
+  useEffect(() => {
+    cargar()
+  }, [])
 
   async function entrada(e) {
     e.preventDefault()
     setMsg('')
     try {
-      await api.post('/entradas/entrada', form)
+      await api.post('/entradas/entrada', {
+        placa: form.placa.toUpperCase().trim(),
+        tipo_vehiculo: form.tipo_vehiculo
+      })
+
       setForm({ placa: '', tipo_vehiculo: 'carro' })
+
+      // Forzamos la recarga de la tabla
       cargar()
-      setMsg('✅ Entrada registrada')
-    } catch (err) { setMsg('❌ ' + (err.response?.data?.detail || 'Error')) }
+
+      setMsg('✅ Entrada registrada correctamente')
+    } catch (err) {
+      setMsg('❌ ' + (err.response?.data?.detail || 'Error al registrar entrada'))
+    }
   }
 
   async function salida(id) {
     try {
       const calc = await api.get(`/entradas/calcular/${id}`)
-      const valor = calc.data.valor
-      if (!confirm(`Cobrar $${valor}?`)) return
+      const valor = calc.data.valor || 0
+      if (!confirm(`¿Cobrar $${valor.toLocaleString()}?`)) return
+
       const { data } = await api.post(`/entradas/salida/${id}`, { metodo_pago: 'efectivo' })
+
       setMsg(`✅ Salida: ${data.placa} - $${Number(data.valor || 0).toLocaleString()} (cambio: $${Number(data.cambio || 0).toLocaleString()})`)
+
+      // Forzamos la recarga de la tabla
       cargar()
-    } catch (err) { setMsg('❌ ' + (err.response?.data?.detail || 'Error')) }
+    } catch (err) {
+      setMsg('❌ ' + (err.response?.data?.detail || 'Error al cobrar salida'))
+    }
   }
 
   return (
@@ -42,7 +70,7 @@ export default function Entradas() {
       <form onSubmit={entrada} className="card mb-5 flex gap-3 items-end flex-wrap">
         <div>
           <label className="text-sm">Placa</label>
-          <input className="input" value={form.placa} required
+          <input className="input" value={form.placa} required placeholder="Ej: ABC123"
             onChange={e => setForm({ ...form, placa: e.target.value.toUpperCase() })} />
         </div>
         <div>
@@ -58,18 +86,18 @@ export default function Entradas() {
       </form>
 
       <div className="card overflow-x-auto">
-        <h3 className="font-semibold mb-3">Vehículos dentro ({Array.isArray(activas) ? activas.length : 0})</h3>
+        <h3 className="font-semibold mb-3">Vehículos dentro ({activas.length})</h3>
         <table className="w-full text-sm">
           <thead className="text-left text-slate-500 border-b">
-            <tr><th className="py-2">Ticket</th><th>Placa</th><th>Tipo</th><th>Espacio</th><th>Entrada</th><th></th></tr>
+            <tr><th className="py-2">Ticket</th><th>Vehículo ID</th><th>Espacio</th><th>Entrada</th><th></th></tr>
           </thead>
           <tbody>
-            {(Array.isArray(activas) ? activas : []).map(o => (
+            {/* PROTECCIÓN DE ARRAY */}
+            {Array.isArray(activas) && activas.map(o => (
               <tr key={o.id} className="border-b hover:bg-slate-50">
                 <td className="py-2">#{o.id}</td>
-                <td className="font-bold text-slate-800">{o.placa || `#${o.vehiculo_id}`}</td>
-                <td><span className="uppercase text-xs font-semibold px-2 py-0.5 bg-slate-100 rounded text-slate-700">{o.tipo_vehiculo || '-'}</span></td>
-                <td><span className="px-2 py-0.5 bg-blue-50 text-blue-700 font-medium rounded text-xs">{o.espacio_codigo || (o.espacio_id ? `#${o.espacio_id}` : '-')}</span></td>
+                <td>Vehículo #{o.vehiculo_id}</td>
+                <td>{o.espacio_id || '-'}</td>
                 <td>{new Date(o.hora_entrada).toLocaleString()}</td>
                 <td>
                   <button onClick={() => salida(o.id)} className="btn btn-danger text-xs flex items-center gap-1">
@@ -78,7 +106,9 @@ export default function Entradas() {
                 </td>
               </tr>
             ))}
-            {(!Array.isArray(activas) || !activas.length) && <tr><td colSpan="6" className="py-6 text-center text-slate-400">Sin vehículos dentro</td></tr>}
+            {(!activas || activas.length === 0) && (
+              <tr><td colSpan="5" className="py-6 text-center text-slate-400">Sin vehículos dentro del parqueadero</td></tr>
+            )}
           </tbody>
         </table>
       </div>

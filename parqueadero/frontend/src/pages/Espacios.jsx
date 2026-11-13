@@ -8,20 +8,37 @@ export default function Espacios() {
 
   const cargar = () => {
     api.get('/espacios/')
-      .then(r => setEsp(Array.isArray(r.data) ? r.data : []))
-      .catch(() => setEsp([]))
+      .then(r => {
+        // Validamos que lo que llegue sea una lista
+        if (Array.isArray(r.data)) setEsp(r.data)
+        else setEsp([])
+      })
+      .catch(err => {
+        console.error("Error al cargar espacios:", err)
+        setEsp([])
+      })
   }
 
+  // Cargar al iniciar la página
   useEffect(() => { cargar() }, [])
 
   async function crear(e) {
     e.preventDefault()
+    setMsg('')
     try {
-      await api.post('/espacios/', form)
+      await api.post('/espacios/', {
+        codigo: form.codigo.toUpperCase().trim(),
+        tipo_vehiculo: form.tipo_vehiculo
+      })
       setForm({ codigo: '', tipo_vehiculo: 'carro' })
+
+      // Volvemos a pedir la lista al backend
       cargar()
-      setMsg('✅ Espacio creado')
-    } catch (err) { setMsg('❌ ' + (err.response?.data?.detail || 'Error')) }
+
+      setMsg('✅ Espacio creado y actualizado en la lista')
+    } catch (err) {
+      setMsg('❌ ' + (err.response?.data?.detail || 'Error al crear'))
+    }
   }
 
   const color = (e) => e.estado === 'libre' ? 'bg-green-100 border-green-400 text-green-700'
@@ -36,7 +53,7 @@ export default function Espacios() {
       <form onSubmit={crear} className="card mb-5 flex gap-3 items-end flex-wrap">
         <div>
           <label className="text-sm">Código</label>
-          <input className="input" required value={form.codigo}
+          <input className="input" required placeholder="Ej: A-01" value={form.codigo}
             onChange={e => setForm({ ...form, codigo: e.target.value.toUpperCase() })} />
         </div>
         <div>
@@ -52,6 +69,7 @@ export default function Espacios() {
       </form>
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        {/* Validamos que 'esp' sea una lista antes de hacer el map */}
         {Array.isArray(esp) && esp.map(e => (
           <div key={e.id} className={`border-2 rounded-lg p-3 text-center ${color(e)}`}>
             <p className="font-bold text-lg">{e.codigo}</p>
@@ -59,7 +77,9 @@ export default function Espacios() {
             <p className="text-xs mt-1">{e.estado}</p>
           </div>
         ))}
-        {(!esp || esp.length === 0) && <p className="col-span-full text-slate-400">No hay espacios creados</p>}
+        {(!esp || esp.length === 0) && (
+          <p className="col-span-full text-slate-400 p-4">No hay espacios creados en la base de datos.</p>
+        )}
       </div>
     </div>
   )
