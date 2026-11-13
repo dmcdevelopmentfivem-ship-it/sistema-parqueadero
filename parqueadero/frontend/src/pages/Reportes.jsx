@@ -10,7 +10,19 @@ export default function Reportes() {
   const [historial, setHistorial] = useState([])
 
   useEffect(() => {
-    api.get(`/reportes/historial?desde=${desde}&hasta=${hasta}`).then(r => setHistorial(r.data))
+    api.get(`/reportes/historial?desde=${desde}&hasta=${hasta}`)
+      .then(r => {
+        // PROTECCIÓN: Validamos que sea una lista antes de guardarla
+        if (Array.isArray(r.data)) {
+          setHistorial(r.data)
+        } else {
+          setHistorial([])
+        }
+      })
+      .catch(err => {
+        console.error(err)
+        setHistorial([]) // Si falla la petición, ponemos lista vacía
+      })
   }, [desde, hasta])
 
   return (
@@ -23,22 +35,24 @@ export default function Reportes() {
       </div>
 
       <div className="card overflow-x-auto">
-        <h3 className="font-semibold mb-3">Historial de ocupaciones ({historial.length})</h3>
+        <h3 className="font-semibold mb-3">Historial de ocupaciones ({Array.isArray(historial) ? historial.length : 0})</h3>
         <table className="w-full text-sm">
           <thead className="text-left text-slate-500 border-b">
             <tr><th className="py-2">Placa</th><th>Tipo</th><th>Entrada</th><th>Salida</th><th>Min</th><th>Valor</th><th>Estado</th></tr>
           </thead>
           <tbody>
-            {historial.map(h => (
+            {/* PROTECCIÓN: Validamos que historial sea un array antes del .map */}
+            {Array.isArray(historial) && historial.map(h => (
               <tr key={h.id} className="border-b">
                 <td className="py-2 font-bold">{h.placa}</td><td>{h.tipo}</td>
                 <td>{h.entrada ? new Date(h.entrada).toLocaleString() : '-'}</td>
                 <td>{h.salida ? new Date(h.salida).toLocaleString() : '-'}</td>
-                <td>{h.minutos ?? '-'}</td><td>${Number(h.valor || 0).toLocaleString()}</td>
+                <td>{h.minutos ?? '-'}</td>
+                <td>${Number(h.valor || 0).toLocaleString()}</td>
                 <td>{h.estado}</td>
               </tr>
             ))}
-            {!historial.length && <tr><td colSpan="7" className="py-6 text-center text-slate-400">Sin datos</td></tr>}
+            {(!historial || historial.length === 0) && <tr><td colSpan="7" className="py-6 text-center text-slate-400">Sin datos</td></tr>}
           </tbody>
         </table>
       </div>
