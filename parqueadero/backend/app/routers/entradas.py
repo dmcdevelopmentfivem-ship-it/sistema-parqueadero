@@ -12,9 +12,23 @@ from ..services.tarifa_service import (
 
 router = APIRouter(prefix="/api/entradas", tags=["entradas"])
 
-@router.get("/activas", response_model=list[OcupacionOut])
+@router.get("/activas")
 def activas(db: Session = Depends(get_db), _=Depends(get_current_user)):
-    return db.query(Ocupacion).filter(Ocupacion.estado == "activa").order_by(Ocupacion.hora_entrada).all()
+    ocupaciones = db.query(Ocupacion).filter(Ocupacion.estado == "activa").order_by(Ocupacion.hora_entrada).all()
+    
+    # Armamos la respuesta incluyendo la placa y el código del espacio
+    resultado = []
+    for o in ocupaciones:
+        resultado.append({
+            "id": o.id,
+            "vehiculo_id": o.vehiculo_id,
+            "placa": o.vehiculo.placa if o.vehiculo else "Desconocida",
+            "tipo_vehiculo": o.vehiculo.tipo if o.vehiculo else "-",
+            "espacio": o.espacio.codigo if o.espacio else "-",
+            "hora_entrada": o.hora_entrada,
+            "estado": o.estado
+        })
+    return resultado
 
 @router.post("/entrada", response_model=EntradaOut, status_code=201)
 def registrar_entrada(data: EntradaCreate, db: Session = Depends(get_db), user=Depends(get_current_user)):
@@ -38,7 +52,7 @@ def registrar_entrada(data: EntradaCreate, db: Session = Depends(get_db), user=D
             Espacio.activo == True
         ).order_by(Espacio.codigo).first()
     if not espacio:
-        raise HTTPException(400, "No hay espacios libres disponibles")
+        raise HTTPException(400, "No hay espacios libres disponibles para este tipo de vehículo")
 
     tarifa = obtener_tarifa_vigente(veh.tipo, db)
     if not tarifa:

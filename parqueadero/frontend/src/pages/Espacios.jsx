@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import api from '../api'
+import { Trash2 } from 'lucide-react'
 
 export default function Espacios() {
   const [esp, setEsp] = useState([])
@@ -8,18 +9,10 @@ export default function Espacios() {
 
   const cargar = () => {
     api.get('/espacios/')
-      .then(r => {
-        // Validamos que lo que llegue sea una lista
-        if (Array.isArray(r.data)) setEsp(r.data)
-        else setEsp([])
-      })
-      .catch(err => {
-        console.error("Error al cargar espacios:", err)
-        setEsp([])
-      })
+      .then(r => setEsp(Array.isArray(r.data) ? r.data : []))
+      .catch(() => setEsp([]))
   }
 
-  // Cargar al iniciar la página
   useEffect(() => { cargar() }, [])
 
   async function crear(e) {
@@ -31,13 +24,21 @@ export default function Espacios() {
         tipo_vehiculo: form.tipo_vehiculo
       })
       setForm({ codigo: '', tipo_vehiculo: 'carro' })
-
-      // Volvemos a pedir la lista al backend
       cargar()
-
-      setMsg('✅ Espacio creado y actualizado en la lista')
+      setMsg('✅ Espacio creado correctamente')
     } catch (err) {
       setMsg('❌ ' + (err.response?.data?.detail || 'Error al crear'))
+    }
+  }
+
+  async function borrar(id, codigo) {
+    if (!confirm(`¿Estás seguro de eliminar el espacio ${codigo}?`)) return
+    try {
+      await api.delete(`/espacios/${id}`)
+      cargar()
+      setMsg('✅ Espacio eliminado')
+    } catch (err) {
+      setMsg('❌ ' + (err.response?.data?.detail || 'No se puede borrar'))
     }
   }
 
@@ -69,9 +70,15 @@ export default function Espacios() {
       </form>
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-        {/* Validamos que 'esp' sea una lista antes de hacer el map */}
         {Array.isArray(esp) && esp.map(e => (
-          <div key={e.id} className={`border-2 rounded-lg p-3 text-center ${color(e)}`}>
+          <div key={e.id} className={`relative border-2 rounded-lg p-3 text-center ${color(e)}`}>
+            <button
+              onClick={() => borrar(e.id, e.codigo)}
+              className="absolute top-1 right-1 text-red-500 hover:text-red-700 bg-white/50 rounded p-1"
+              title="Eliminar espacio"
+            >
+              <Trash2 size={14} />
+            </button>
             <p className="font-bold text-lg">{e.codigo}</p>
             <p className="text-xs uppercase">{e.tipo_vehiculo}</p>
             <p className="text-xs mt-1">{e.estado}</p>

@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import api from '../api'
-import { Plus, LogOut } from 'lucide-react'
+import { Plus, LogOut, Search } from 'lucide-react'
 
 export default function Entradas() {
   const [activas, setActivas] = useState([])
   const [form, setForm] = useState({ placa: '', tipo_vehiculo: 'carro' })
   const [msg, setMsg] = useState('')
+  const [buscar, setBuscar] = useState('')
 
-  // Función para cargar los vehículos dentro
   const cargar = () => {
     api.get('/entradas/activas')
       .then(r => {
@@ -20,10 +20,7 @@ export default function Entradas() {
       })
   }
 
-  // Cargar al iniciar
-  useEffect(() => {
-    cargar()
-  }, [])
+  useEffect(() => { cargar() }, [])
 
   async function entrada(e) {
     e.preventDefault()
@@ -33,12 +30,8 @@ export default function Entradas() {
         placa: form.placa.toUpperCase().trim(),
         tipo_vehiculo: form.tipo_vehiculo
       })
-
       setForm({ placa: '', tipo_vehiculo: 'carro' })
-
-      // Forzamos la recarga de la tabla
       cargar()
-
       setMsg('✅ Entrada registrada correctamente')
     } catch (err) {
       setMsg('❌ ' + (err.response?.data?.detail || 'Error al registrar entrada'))
@@ -52,15 +45,17 @@ export default function Entradas() {
       if (!confirm(`¿Cobrar $${valor.toLocaleString()}?`)) return
 
       const { data } = await api.post(`/entradas/salida/${id}`, { metodo_pago: 'efectivo' })
-
       setMsg(`✅ Salida: ${data.placa} - $${Number(data.valor || 0).toLocaleString()} (cambio: $${Number(data.cambio || 0).toLocaleString()})`)
-
-      // Forzamos la recarga de la tabla
       cargar()
     } catch (err) {
       setMsg('❌ ' + (err.response?.data?.detail || 'Error al cobrar salida'))
     }
   }
+
+  // Filtramos los vehículos por la placa que se escriba en el buscador
+  const filtradas = activas.filter(o =>
+    o.placa && o.placa.toLowerCase().includes(buscar.toLowerCase())
+  )
 
   return (
     <div>
@@ -86,18 +81,33 @@ export default function Entradas() {
       </form>
 
       <div className="card overflow-x-auto">
-        <h3 className="font-semibold mb-3">Vehículos dentro ({activas.length})</h3>
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="font-semibold">Vehículos dentro ({filtradas.length})</h3>
+
+          {/* Barra de búsqueda */}
+          <div className="relative">
+            <Search className="absolute left-2 top-2.5 text-slate-400" size={16} />
+            <input
+              type="text"
+              placeholder="Buscar placa..."
+              className="input pl-8 py-2 w-48 text-sm"
+              value={buscar}
+              onChange={e => setBuscar(e.target.value)}
+            />
+          </div>
+        </div>
+
         <table className="w-full text-sm">
           <thead className="text-left text-slate-500 border-b">
-            <tr><th className="py-2">Ticket</th><th>Vehículo ID</th><th>Espacio</th><th>Entrada</th><th></th></tr>
+            <tr><th className="py-2">Ticket</th><th>Placa</th><th>Tipo</th><th>Espacio</th><th>Entrada</th><th></th></tr>
           </thead>
           <tbody>
-            {/* PROTECCIÓN DE ARRAY */}
-            {Array.isArray(activas) && activas.map(o => (
+            {Array.isArray(filtradas) && filtradas.map(o => (
               <tr key={o.id} className="border-b hover:bg-slate-50">
                 <td className="py-2">#{o.id}</td>
-                <td>Vehículo #{o.vehiculo_id}</td>
-                <td>{o.espacio_id || '-'}</td>
+                <td className="font-bold text-blue-600">{o.placa}</td>
+                <td className="capitalize">{o.tipo_vehiculo}</td>
+                <td>{o.espacio}</td>
                 <td>{new Date(o.hora_entrada).toLocaleString()}</td>
                 <td>
                   <button onClick={() => salida(o.id)} className="btn btn-danger text-xs flex items-center gap-1">
@@ -106,8 +116,8 @@ export default function Entradas() {
                 </td>
               </tr>
             ))}
-            {(!activas || activas.length === 0) && (
-              <tr><td colSpan="5" className="py-6 text-center text-slate-400">Sin vehículos dentro del parqueadero</td></tr>
+            {(!filtradas || filtradas.length === 0) && (
+              <tr><td colSpan="6" className="py-6 text-center text-slate-400">No hay vehículos que coincidan</td></tr>
             )}
           </tbody>
         </table>

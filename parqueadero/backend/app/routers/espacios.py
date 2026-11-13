@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..database import get_db
-from ..models import Zona, Espacio, Ocupacion
+from ..models import Zona, Espacio
 from ..schemas import ZonaCreate, ZonaOut, EspacioCreate, EspacioOut
 from ..deps import get_current_user
 
@@ -34,14 +34,14 @@ def crear(data: EspacioCreate, db: Session = Depends(get_db), _=Depends(get_curr
         raise HTTPException(400, "Código ya existe")
     e = Espacio(**data.model_dump()); db.add(e); db.commit(); db.refresh(e); return e
 
-@router.delete("/{espacio_id}")
-def eliminar(espacio_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
-    espacio = db.get(Espacio, espacio_id)
+@router.delete("/{espacio_id}", status_code=204)
+def eliminar_espacio(espacio_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
+    espacio = db.query(Espacio).filter(Espacio.id == espacio_id).first()
     if not espacio:
         raise HTTPException(404, "Espacio no encontrado")
     if espacio.estado == "ocupado":
-        raise HTTPException(400, "No se puede eliminar un espacio que se encuentra ocupado")
-    db.query(Ocupacion).filter(Ocupacion.espacio_id == espacio.id).update({"espacio_id": None})
+        raise HTTPException(400, "No se puede borrar un espacio que está ocupado")
+    
     db.delete(espacio)
     db.commit()
-    return {"status": "ok", "message": f"Espacio {espacio.codigo} eliminado"}
+    return None
